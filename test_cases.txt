@@ -144,3 +144,90 @@ Accept-Ranges: bytes
 Content-Length: 2104
 Connection: close
 Content-Type: text/htmlOK
+
+9. Empty protocol -> protocol = "http"
+./main -d info.cern.ch/hypertext/WWW/TheProject.html
+
+rotocol: http 
+ 
+Site: info.cern.ch 
+ 
+Uri: hypertext/WWW/TheProject.html 
+ 
+HTTP/1.1 200 OK
+Date: Fri, 09 Dec 2022 00:17:16 GMT
+Server: Apache
+Last-Modified: Thu, 03 Dec 1992 08:37:20 GMT
+ETag: "8a9-291e721905000"
+Accept-Ranges: bytes
+Content-Length: 2217
+Connection: close
+Content-Type: text/html
+
+<HEADER>
+<TITLE>The World Wide Web project</TITLE>
+<NEXTID N="55">
+</HEADER>
+<BODY>
+<H1>World Wide Web</H1>The WorldWideWeb (W3) is a wide-area<A
+NAME=0 HREF="WhatIs.html">
+hypermedia</A> information retrieval
+initiative aiming to give universal
+access to a large universe of documents.<P>
+Everything there is online about
+W3 is linked directly or indirectly
+to this document, including an <A
+NAME=24 HREF="Summary.html">executive
+summary</A> of the project, <A
+NAME=29 HREF="Administration/Mailing/Overview.html">Mailing lists</A>
+, <A
+NAME=30 HREF="Policy.html">Policy</A> , November's  <A
+NAME=34 HREF="News/9211.html">W3  news</A> ,
+<A
+NAME=41 HREF="FAQ/List.html">Frequently Asked Questions</A> .
+<DL>
+<DT><A
+NAME=44 HREF="../DataSources/Top.html">What's out there?</A>
+<DD> Pointers toGET /hypertext/WWW/TheProject.html HTTP/1.1
+Host: info.cern.ch
+Accept: text/plain, text/html, application/json, application/xml
+
+Response code: 200 
+
+10. Empty path -> path = "/"
+./main -d http://info.cern.ch/
+
+Protocol: http 
+ 
+Site: info.cern.ch 
+ 
+path: / 
+ 
+Host IP: 188.184.21.108 
+ 
+HTTP/1.1 200 OK
+Date: Sat, 10 Dec 2022 00:33:22 GMT
+Server: Apache
+Last-Modified: Wed, 05 Feb 2014 16:00:31 GMT
+ETag: "286-4f1aadb3105c0"
+Accept-Ranges: bytes
+Content-Length: 646
+Connection: close
+Content-Type: text/html
+
+<html><head></head><body><header>
+<title>http://info.cern.ch</title>
+</header>
+
+<h1>http://info.cern.ch - home of the first website</h1>
+<p>From here you can:</p>
+<ul>
+<li><a href="http://info.cern.ch/hypertext/WWW/TheProject.html">Browse the first website</a></li>
+<li><a href="http://line-mode.cern.ch/www/hypertext/WWW/TheProject.html">Browse the first website using the line-mode browser simulator</a></li>
+<li><a href="http://home.web.cern.ch/topics/birth-web">Learn about the birth of the web</a></li>
+<li><a href="http://home.web.cern.ch/about">Learn about CERN, the physics laboratory where the web was born</a></li>
+</ul>
+</body></html>
+Response code: 200 
+ 
+OK

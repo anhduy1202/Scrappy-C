@@ -1,5 +1,7 @@
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +10,11 @@
 #include <unistd.h>
 
 void print_menu();
+void error(char *msg) {
+  perror(msg);
+  exit(0);
+};
+int host_to_ip(const char *hostname, char *ip_add);
 
 int debug_on = 0; // 0: off, 1: on
 int head_tag = 0;
@@ -41,6 +48,9 @@ int main(int argc, char **argv) {
       position += 1;
       ++next_idx;
     } else if (!strcmp(argv[next_idx], "-B") || !strcmp(argv[next_idx], "-b")) {
+      if (debug_on) {
+        printf("BODY TAG ONLY \n \n");
+      }
       ++next_idx;
       position += 1;
       body_tag = 1;
@@ -58,34 +68,54 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Parse the URL into its protocol, site, and URI
+  // Parse the URL into its protocol, site, and path
   char *protocol = strtok(argv[position], ":");
   char *site = strtok(NULL, "/");
-  char *uri = strtok(NULL, "");
+  char *path = strtok(NULL, "");
+
+  char ip_address[INET_ADDRSTRLEN];
+
+  // If path empty
+  if (path == NULL) {
+    path = "/";
+  }
+  // Check if the protocol is HTTP
+  if (strcmp(protocol, "http") != 0) {
+    error("ERROR: Invalid protocol. Only HTTP is supported\n");
+    print_menu();
+  }
+
+  // Set protocol to be http if user don't provide the protocol
+  if (strlen(protocol) > 4) {
+    protocol = "http";
+    site = strtok(argv[position], "/");
+    path = strtok(NULL, "");
+  }
+
   if (debug_on) {
     printf("Protocol: %s \n \n", protocol);
     printf("Site: %s \n \n", site);
-    printf("Uri: %s \n \n", uri);
-  }
-
-  // Check if the protocol is HTTP
-  if (strcmp(protocol, "http") != 0) {
-    printf("ERROR: Invalid protocol. Only HTTP is supported\n");
-    print_menu();
+    printf("path: %s \n \n", path);
   }
 
   // Create a socket to connect to the website
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
-    printf("ERROR: Could not create socket\n");
+    error("ERROR: Could not create socket\n");
     exit(1);
   }
-
   // Get the IP address of the website
   struct hostent *host = gethostbyname(site);
   if (host == NULL) {
-    printf("ERROR: Could not resolve host\n");
+    error("ERROR: Could not resolve host\n");
     exit(1);
+  }
+  int valid_ip = host_to_ip(host->h_name, ip_address);
+  if (valid_ip < 0) {
+    error("ERROR: failed to get host ip address \n");
+  }
+  if (debug_on) {
+    printf("The IP address of %s is %s\n", host->h_name, ip_address);
   }
 
   // Set up the server address
@@ -93,11 +123,12 @@ int main(int argc, char **argv) {
   memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(80);
-  memcpy(&serv_addr.sin_addr.s_addr, host->h_addr, host->h_length);
+  // Convert IP address to binary representation
+  inet_pton(AF_INET, ip_address, &serv_addr.sin_addr);
 
   // Connect to the server
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-    printf("ERROR: Could not connect to server\n");
+    error("ERROR: Could not connect to server\n");
     return 1;
   }
 
@@ -106,9 +137,9 @@ int main(int argc, char **argv) {
   sprintf(request,
           "GET /%s HTTP/1.1\r\nHost: %s\r\nAccept: text/plain, text/html, "
           "application/json, application/xml\r\n\r\n",
-          uri, site);
+          path, site);
   if (write(sockfd, request, strlen(request)) < 0) {
-    printf("ERROR: Could not send request to server\n");
+    error("ERROR: Could not send request to server\n");
     return 1;
   }
 
@@ -116,7 +147,7 @@ int main(int argc, char **argv) {
   char response[1024];
   int n = read(sockfd, response, sizeof(response));
   if (n < 0) {
-    printf("ERROR: Could not receive response from server\n");
+    error("ERROR: Could not receive response from server\n");
     exit(1);
   }
 
@@ -136,11 +167,7 @@ int main(int argc, char **argv) {
   // Print what between <BODY> </BODY>
   if (body_tag) {
     int start = strstr(response, "<BODY>") - response;
-    int end = strstr(response, "</BODY>") - response;
-    for (int i = start + 6; i < end; i++) {
-      if (i == strlen(response)) {
-        break;
-      }
+    for (int i = start + 6; i < strlen(response); i++) {
       printf("%c", response[i]);
     }
   }
@@ -175,6 +202,38 @@ int main(int argc, char **argv) {
 
   // Close the socket
   close(sockfd);
+
+  return 0;
+}
+
+int host_to_ip(const char *hostname, char *ip_address) {
+  struct addrinfo hints, *result, *rp;
+  int s;
+
+  // Set up the hints structure to specify that we want
+  // an IPv4 address and a stream (TCP) socket.
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+
+  // Call getaddrinfo() to resolve the host name to an IP address.
+  s = getaddrinfo(hostname, NULL, &hints, &result);
+  if (s != 0) {
+    fprintf(stderr, "ERROR: %s\n", gai_strerror(s));
+    return -1;
+  }
+
+  // Loop through the results and use the first one we can connect to.
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    // Convert the IP address to a string and copy it to the output buffer.
+    inet_ntop(AF_INET, &(((struct sockaddr_in *)rp->ai_addr)->sin_addr),
+              ip_address, INET_ADDRSTRLEN);
+
+    // We've found an IP address, so we can stop now.
+    break;
+  }
+
+  freeaddrinfo(result);
 
   return 0;
 }

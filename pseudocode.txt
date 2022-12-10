@@ -1,0 +1,53 @@
+MAIN
+  Verify command line args length (Can't be empty)
+  parse command line args (url, -h, --help, -b, -B, -o, -O, -d)
+  parse url into parts ( uri, protocol, site)
+
+  Check valid protocol ( http only, no https)
+  if protocol is empty
+    protcol = http
+
+  if path is empty
+    path = "/"
+
+  if LOOKS LIKE IP ADDRESS ( host) is FALSE
+    CONVERT HOST TO IP ADDRESS( host, ip_address)
+  else
+    ip_address = host
+
+  HTTP FETCH AND PRINT ( ip_address, path )
+
+  exit
+
+
+
+CONVERT HOST TO IP ADDRESS ( host string, ip address )
+  // don't know how to do this yet
+
+PARSE URL INTO PARTS:
+  /*
+  http://www.doublepup.com/ip.txt
+  - protocol
+  - host
+  - path
+  <anything up to :// > - protocol
+  <anything up to / >  host
+  <slash AND anything after it> - path
+
+  */
+
+bool LOOKS LIKE IP ADDRESS ( hostname )
+  // do some magic
+  return true or false
+
+HTTP FETCH AND PRINT (server_address, page )
+  create socket
+  connect to server_address
+  write GET request for "page"--- using HTTP
+  read response --- using HTTP
+
+  if response code is 200
+    print response text
+  else
+    print code as error message
+  close socket
