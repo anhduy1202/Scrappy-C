@@ -22,6 +22,11 @@ int body_tag = 0;
 int http_only = 0;
 
 int main(int argc, char **argv) {
+  struct sockaddr_in serv_addr;
+  char ip_address[INET_ADDRSTRLEN];
+  char *protocol;
+  char *path;
+  char *site;
   int next_idx = 1;
   int position = 1;
   // Process command line args
@@ -69,36 +74,58 @@ int main(int argc, char **argv) {
   }
 
   // Check if input is domain name or IP address
-
-  // Parse the URL into its protocol, site, and path
-  char *protocol = strtok(argv[position], ":");
-  char *site = strtok(NULL, "/");
-  char *path = strtok(NULL, "");
-
-  char ip_address[INET_ADDRSTRLEN];
-
-
-  // If path empty
-  if (path == NULL) {
-    path = "/";
-  }
-  // Check if the protocol is HTTP
-  if (strcmp(protocol, "http") != 0) {
-    error("ERROR: Invalid protocol. Only HTTP is supported\n");
-    print_menu();
-  }
-
-  // Set protocol to be http if user don't provide the protocol
-  if (strlen(protocol) > 4) {
-    protocol = "http";
-    site = strtok(argv[position], "/");
+  int is_ip_address = inet_pton(AF_INET, argv[position], &serv_addr.sin_addr);
+  if (is_ip_address == 0) {
+    if (debug_on) {
+      printf("Input is not in IP address form \n \n");
+    }
+    // Parse the URL into its protocol, site, and path
+    protocol = strtok(argv[position], ":");
+    site = strtok(NULL, "/");
     path = strtok(NULL, "");
+    // If path empty
+    if (path == NULL) {
+      path = "/";
+    }
+    // Check if the protocol is HTTP
+    if (strcmp(protocol, "http") != 0) {
+      error("ERROR: Invalid protocol. Only HTTP is supported\n");
+      print_menu();
+    }
+
+    // Set protocol to be http if user don't provide the protocol
+    if (strlen(protocol) > 4) {
+      protocol = "http";
+      site = strtok(argv[position], "/");
+      path = strtok(NULL, "");
+    }
+
+    if (debug_on) {
+      printf("Protocol: %s \n \n", protocol);
+      printf("Site: %s \n \n", site);
+      printf("path: %s \n \n", path);
+    }
+    // Get the IP address of the website
+    struct hostent *host = gethostbyname(site);
+    if (host == NULL) {
+      error("ERROR: Could not resolve host\n");
+      exit(1);
+    }
+    int valid_ip = host_to_ip(host->h_name, ip_address);
+    if (valid_ip < 0) {
+      error("ERROR: failed to get host ip address \n");
+    }
+    if (debug_on) {
+      printf("The IP address of %s is %s\n", host->h_name, ip_address);
+    }
+
   }
 
-  if (debug_on) {
-    printf("Protocol: %s \n \n", protocol);
-    printf("Site: %s \n \n", site);
-    printf("path: %s \n \n", path);
+  else {
+    if (debug_on) {
+      printf("IP Address: %s", ip_address);
+    }
+    strcpy(ip_address, argv[position]);
   }
 
   // Create a socket to connect to the website
@@ -107,29 +134,15 @@ int main(int argc, char **argv) {
     error("ERROR: Could not create socket\n");
     exit(1);
   }
-  // Get the IP address of the website
-  struct hostent *host = gethostbyname(site);
-  if (host == NULL) {
-    error("ERROR: Could not resolve host\n");
-    exit(1);
-  }
-  int valid_ip = host_to_ip(host->h_name, ip_address);
-  if (valid_ip < 0) {
-    error("ERROR: failed to get host ip address \n");
-  }
-  if (debug_on) {
-    printf("The IP address of %s is %s\n", host->h_name, ip_address);
-  }
 
   // Set up the server address
-  struct sockaddr_in serv_addr;
   memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(80);
-  // Convert IP address to binary representation
-  inet_pton(AF_INET, ip_address, &serv_addr.sin_addr);
 
-  // Connect to the server
+  // Convert IP address to binary representation
+  int status = inet_pton(AF_INET, ip_address, &serv_addr.sin_addr);
+
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
     error("ERROR: Could not connect to server\n");
     return 1;
@@ -138,9 +151,10 @@ int main(int argc, char **argv) {
   // Send a request to the server to access the specified web page
   char request[1024];
   sprintf(request,
-          "GET /%s HTTP/1.1\r\nHost: %s\r\nAccept: text/plain, text/html, "
+          "GET /%s HTTP/1.1\r\nHost: %s\r\nAccept: text/plain, text/html,  "
+          "charset=iso-8859-1"
           "application/json, application/xml\r\n\r\n",
-          path, site);
+          path, ip_address);
   if (write(sockfd, request, strlen(request)) < 0) {
     error("ERROR: Could not send request to server\n");
     return 1;
