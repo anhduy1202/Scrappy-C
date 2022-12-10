@@ -1,14 +1,15 @@
 MAIN
   Verify command line args length (Can't be empty)
   parse command line args (url, -h, --help, -b, -B, -o, -O, -d)
-  parse url into parts ( uri, protocol, site)
+  Check if input is domain name or IP address
+  If input is domain name
+    parse url into parts ( uri, protocol, site)
+    Check valid protocol ( http only, no https)
+    if protocol is empty
+      protcol = http
 
-  Check valid protocol ( http only, no https)
-  if protocol is empty
-    protcol = http
-
-  if path is empty
-    path = "/"
+    if path is empty
+      path = "/"
 
   if LOOKS LIKE IP ADDRESS ( host) is FALSE
     CONVERT HOST TO IP ADDRESS( host, ip_address)

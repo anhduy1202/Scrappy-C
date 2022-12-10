@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
     }
   }
 
+  // Check if input is domain name or IP address
+
   // Parse the URL into its protocol, site, and path
   char *protocol = strtok(argv[position], ":");
   char *site = strtok(NULL, "/");
