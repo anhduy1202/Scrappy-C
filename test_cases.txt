@@ -26,11 +26,18 @@ Example:
 
 2. Successfully send request to http://www.doublepup.com/ip.txt
 
-./main http://www.doublepup.com/ip.txt
+./main -d http://www.doublepup.com/ip.txt
 
 Output:
+Protocol: http 
+ 
+Site: www.doublepup.com 
+ 
+path: ip.txt 
+ 
+The IP address of doublepup.com is 216.92.194.126
 HTTP/1.1 200 OK
-Date: Tue, 06 Dec 2022 00:09:14 GMT
+Date: Sat, 10 Dec 2022 12:28:02 GMT
 Server: Apache
 Last-Modified: Tue, 23 Aug 2016 04:32:26 GMT
 ETag: "f-53ab5a6dfd00d"
@@ -39,7 +46,8 @@ Content-Length: 15
 Content-Type: text/plain
 
 216.92.194.126
-
+Response code: 200 
+ 
 OK
 
 3. Only HTTP is valid
@@ -146,16 +154,17 @@ Connection: close
 Content-Type: text/htmlOK
 
 9. Empty protocol -> protocol = "http"
-./main -d info.cern.ch/hypertext/WWW/TheProject.html
 
-rotocol: http 
+./main -d info.cern.ch/hypertext/WWW/TheProject.html
+Protocol: http 
  
 Site: info.cern.ch 
  
-Uri: hypertext/WWW/TheProject.html 
+path: hypertext/WWW/TheProject.html 
  
+The IP address of webafs706.cern.ch is 188.184.21.108
 HTTP/1.1 200 OK
-Date: Fri, 09 Dec 2022 00:17:16 GMT
+Date: Sat, 10 Dec 2022 12:27:08 GMT
 Server: Apache
 Last-Modified: Thu, 03 Dec 1992 08:37:20 GMT
 ETag: "8a9-291e721905000"
@@ -193,6 +202,8 @@ Host: info.cern.ch
 Accept: text/plain, text/html, application/json, application/xml
 
 Response code: 200 
+ 
+OK
 
 10. Empty path -> path = "/"
 ./main -d http://info.cern.ch/
@@ -228,6 +239,30 @@ Content-Type: text/html
 <li><a href="http://home.web.cern.ch/about">Learn about CERN, the physics laboratory where the web was born</a></li>
 </ul>
 </body></html>
+Response code: 200 
+ 
+OK
+
+11. Input is ip address
+./main -d http://216.92.194.126/ip.txt
+
+Protocol: http 
+ 
+Site: 216.92.194.126 
+ 
+path: ip.txt 
+ 
+The IP address of 216.92.194.126 is 216.92.194.126
+HTTP/1.1 200 OK
+Date: Sat, 10 Dec 2022 12:25:59 GMT
+Server: Apache
+Last-Modified: Tue, 23 Aug 2016 04:32:26 GMT
+ETag: "f-53ab5a6dfd00d"
+Accept-Ranges: bytes
+Content-Length: 15
+Content-Type: text/plain
+
+216.92.194.126
 Response code: 200 
  
 OK

@@ -1,15 +1,13 @@
 MAIN
   Verify command line args length (Can't be empty)
   parse command line args (url, -h, --help, -b, -B, -o, -O, -d)
-  Check if input is domain name or IP address
-  If input is domain name
-    parse url into parts ( uri, protocol, site)
-    Check valid protocol ( http only, no https)
-    if protocol is empty
-      protcol = http
+  parse url into parts ( uri, protocol, site)
+  Check valid protocol ( http only, no https)
+  if protocol is empty
+    protcol = http
 
-    if path is empty
-      path = "/"
+  if path is empty
+    path = "/"
 
   if LOOKS LIKE IP ADDRESS ( host) is FALSE
     CONVERT HOST TO IP ADDRESS( host, ip_address)
@@ -23,7 +21,11 @@ MAIN
 
 
 CONVERT HOST TO IP ADDRESS ( host string, ip address )
-  // don't know how to do this yet
+  - Set up the hints structure to specify that we want an IPv4 address and a stream (TCP) socket
+  -  Call getaddrinfo() to resolve the host name to an IP address
+  - Loop through the results and use the first one we can connect to
+  - Convert the IP address to a string and copy it to the output buffer
+  - Return the ip address if found
 
 PARSE URL INTO PARTS:
   /*
@@ -38,8 +40,8 @@ PARSE URL INTO PARTS:
   */
 
 bool LOOKS LIKE IP ADDRESS ( hostname )
-  // do some magic
-  return true or false
+  - Use the inet_pton() to convert IP address to binary expression
+  return true if ip valid, else return false
 
 HTTP FETCH AND PRINT (server_address, page )
   create socket
@@ -47,8 +49,10 @@ HTTP FETCH AND PRINT (server_address, page )
   write GET request for "page"--- using HTTP
   read response --- using HTTP
 
-  if response code is 200
+  if response code is 2xx
     print response text
+  eles if response code i 3xx
+    print redirect to host site
   else
     print code as error message
   close socket
